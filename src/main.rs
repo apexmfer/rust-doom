@@ -1,5 +1,6 @@
 use failure::{bail, Error};
 use game::{self, Game, GameConfig};
+use menu::{self, Menu, MenuConfig};
 use log::{error, info};
 use math::DurationExt;
 use std::env;
@@ -85,7 +86,7 @@ impl App {
         Self::from_args().run()
     }
 
-    /// Either play the game (if no `Command` was passed), or perform the command.
+    /// Either load the main menu (if no `Command` was passed), or perform the command.
     pub fn run(self) -> Result<(), Error> {
         // Init logging, with default `info` level.
         env_logger::Builder::from_env(
@@ -94,8 +95,16 @@ impl App {
         .format_timestamp(None)
         .init();
 
+
+        // go into a menu 
+
+        menu::create(&self.cmds_to_menu_config())?.run();
+
+
+        /*
         match self.command {
             None => {
+                //start the game 
                 game::create(&self.into_config())?.run();
             }
             Some(Command::Check) => {
@@ -119,13 +128,26 @@ impl App {
                     println!("{:3} {:8}", i_level, wad.level_lump(i_level)?.name());
                 }
             }
-        }
+        }*/
         Ok(())
     }
 
     /// Populate `GameConfig` fields from the parsed command-line arguments.
     fn into_config(self) -> GameConfig {
         GameConfig {
+            wad_file: self.iwad,
+            metadata_file: self.metadata,
+            fov: self.fov,
+            width: self.resolution.0,
+            height: self.resolution.1,
+            version: env!("CARGO_PKG_VERSION"),
+            initial_level_index: self.level_index,
+        }
+    }
+
+
+    fn cmds_to_menu_config(self) -> MenuConfig {
+        MenuConfig {
             wad_file: self.iwad,
             metadata_file: self.metadata,
             fov: self.fov,
