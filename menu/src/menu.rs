@@ -1,7 +1,9 @@
 use super::errors::{ErrorKind, Result};
- 
+
 use super::hud::{Bindings as HudBindings, Hud};
+ 
   
+
 use super::SHADER_ROOT;
 use engine::type_list::Peek;
 use engine::{
@@ -53,11 +55,14 @@ pub fn create(config: &MenuConfig) -> Result<impl Menu> {
             .system(Transforms::bind())?
             .system(Projections::bind())?
             .system(Shaders::bind())?
+            .inject(HudBindings::default())
             .system(Uniforms::bind())?
             .system(Meshes::bind())?
             .system(Materials::bind())?
             .system(RenderPipeline::bind())?
-            .system(TextRenderer::bind())?
+            .system(TextRenderer::bind())? 
+            .system(Hud::bind())? 
+            .system(Renderer::bind())?
  
  
             .build()
@@ -110,6 +115,10 @@ where
         Ok(())
     }
 */
+
+
+
+
     fn destroy(&mut self) -> Result<()> {
         if let Some(context) = self.context.as_mut() {
             context
