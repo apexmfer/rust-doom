@@ -4,7 +4,7 @@ mod errors;
 mod menu;
 mod hud;
 mod vertex;
- 
+mod scene;
 
 
 pub use self::errors::{Error, Result};

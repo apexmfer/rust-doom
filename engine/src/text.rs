@@ -97,6 +97,8 @@ impl TextRenderer {
     }
 
     pub fn render(&self, frame: &mut Frame) -> Result<()> {
+
+        println!("render text");
         for text in &self.slab {
             if !text.visible {
                 continue;

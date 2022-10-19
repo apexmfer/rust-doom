@@ -60,6 +60,11 @@ impl<'context> InfallibleSystem<'context> for Hud {
     }
 
     fn create(deps: Dependencies) -> Self {
+
+        println!("creating hud");
+
+
+
         deps.input.set_mouse_enabled(true);
         deps.input.set_cursor_grabbed(true);
 
@@ -69,7 +74,7 @@ impl<'context> InfallibleSystem<'context> for Hud {
         let help_text = deps
             .text
             .insert(deps.window, HELP_TEXT, Pnt2f::origin(), HELP_PADDING);
-        deps.text[help_text].set_visible(false);
+        deps.text[help_text].set_visible(true);
 
         Hud {
             prompt_text,

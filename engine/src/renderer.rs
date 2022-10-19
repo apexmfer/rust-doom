@@ -62,6 +62,7 @@ impl<'context> System<'context> for Renderer {
     fn update(&mut self, deps: Dependencies) -> Result<()> {
         // If the current tick isn't a frame, skip all rendering.
         if !deps.tick.is_frame() {
+            println!("tick is not frame - skip render");
             return Ok(());
         }
 
@@ -71,8 +72,11 @@ impl<'context> System<'context> for Renderer {
         let camera_id = if let Some(camera_id) = pipe.camera {
             camera_id
         } else {
+            println!("no camera - skip render");
             return Ok(());
         };
+
+        println!("about to renderrr");
 
         // Compute view transform by inverting the camera entity transform.
         let view_transform = if let Some(transform) = deps.transforms.get_absolute(camera_id) {

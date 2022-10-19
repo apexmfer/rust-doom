@@ -2,7 +2,7 @@ use super::errors::{ErrorKind, Result};
 
 use super::hud::{Bindings as HudBindings, Hud};
  
-  
+use super::scene::Scene;
 
 use super::SHADER_ROOT;
 use engine::type_list::Peek;
@@ -56,10 +56,12 @@ pub fn create(config: &MenuConfig) -> Result<impl Menu> {
             .system(Projections::bind())?
             .system(Shaders::bind())?
             .inject(HudBindings::default())
+            
             .system(Uniforms::bind())?
             .system(Meshes::bind())?
             .system(Materials::bind())?
             .system(RenderPipeline::bind())?
+            .system(Scene::bind())?
             .system(TextRenderer::bind())? 
             .system(Hud::bind())? 
             .system(Renderer::bind())?
