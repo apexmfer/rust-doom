@@ -33,12 +33,18 @@ pub struct Scene {
 
 #[derive(DependenciesFrom)]
 pub struct Dependencies<'context> {
-    bindings: &'context Bindings,
+
+    //these require pluck ??
+   // bindings: &'context Bindings,
     config: &'context Config,
+
+
 
     tick: &'context Tick,
     window: &'context Window,
     input: &'context Input,
+
+    
     entities: &'context mut Entities,
     transforms: &'context mut Transforms,
     projections: &'context mut Projections,
