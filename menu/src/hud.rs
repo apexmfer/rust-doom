@@ -1,6 +1,6 @@
 use engine::{
     ControlFlow, DependenciesFrom, Gesture, InfallibleSystem, Input, Scancode, TextId,
-    TextRenderer, Window, Uniforms, Meshes, RenderPipeline, Entities
+    TextRenderer, Window, 
 };
 use math::prelude::*;
 use math::Pnt2f;
@@ -43,11 +43,6 @@ pub struct Dependencies<'context> {
     text: &'context mut TextRenderer,
     control_flow: &'context mut ControlFlow,
 
-    entities: &'context mut Entities,
-    uniforms: &'context mut Uniforms,
-    meshes: &'context mut Meshes,
-    render: &'context mut RenderPipeline,
-
     
 }
 
@@ -86,15 +81,7 @@ impl<'context> InfallibleSystem<'context> for Hud {
         deps.text[help_text].set_visible(true);
 
 
-
-        info!("Creating static meshes and models...");
-
-        deps
-        .meshes 
-        .add( deps.window, deps.entities, root,  "menu_background" )
-        .immutable(&builder.static_vertices)?
-        .build_unindexed();
-
+      
 
         Hud {
             prompt_text,

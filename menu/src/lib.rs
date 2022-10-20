@@ -5,7 +5,9 @@ mod menu;
 mod hud;
 mod vertex;
 mod scene;
-
+mod world; //need this ?
+mod lights;
+mod scene_shaders;
 
 pub use self::errors::{Error, Result};
 pub use self::menu::{create, Menu, MenuConfig};
