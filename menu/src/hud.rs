@@ -1,6 +1,6 @@
 use engine::{
     ControlFlow, DependenciesFrom, Gesture, InfallibleSystem, Input, Scancode, TextId,
-    TextRenderer, Window,
+    TextRenderer, Window, Uniforms, Meshes, RenderPipeline, Entities
 };
 use math::prelude::*;
 use math::Pnt2f;
@@ -38,9 +38,15 @@ impl Default for Bindings {
 pub struct Dependencies<'context> {
     bindings: &'context Bindings,
     window: &'context Window,
+
     input: &'context mut Input,
     text: &'context mut TextRenderer,
     control_flow: &'context mut ControlFlow,
+
+    entities: &'context mut Entities,
+    uniforms: &'context mut Uniforms,
+    meshes: &'context mut Meshes,
+    render: &'context mut RenderPipeline,
 
     
 }
@@ -70,11 +76,25 @@ impl<'context> InfallibleSystem<'context> for Hud {
 
         let prompt_text = deps
             .text
-            .insert(deps.window, PROMPT_TEXT, Pnt2f::origin(), HELP_PADDING);
+            .insert(deps.window, PROMPT_TEXT, Pnt2f::origin(), 0);
+       
+       
+       
         let help_text = deps
             .text
             .insert(deps.window, HELP_TEXT, Pnt2f::origin(), HELP_PADDING);
         deps.text[help_text].set_visible(true);
+
+
+
+        info!("Creating static meshes and models...");
+
+        deps
+        .meshes 
+        .add( deps.window, deps.entities, root,  "menu_background" )
+        .immutable(&builder.static_vertices)?
+        .build_unindexed();
+
 
         Hud {
             prompt_text,
@@ -136,7 +156,7 @@ enum HelpState {
     Hidden,
 }
 
-const HELP_PADDING: u32 = 6;
+const HELP_PADDING: u32 = 24;
 const PROMPT_TEXT: &str = "WASD and mouse, 'E' to push/use, LB to shoot or 'h' for help.";
 const HELP_TEXT: &str = r"Use WASD to move and the mouse or arrow keys to aim.
 Other keys:
