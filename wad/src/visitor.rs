@@ -330,6 +330,15 @@ impl LevelAnalysis {
         this
     }
 
+    pub fn new_empty( ) -> Self {
+        let mut this = Self {
+            dynamic_info: IndexMap::new(),
+            triggers: Vec::new(),
+            num_objects: 0,
+        };
+        this
+    }
+
     pub fn num_objects(&self) -> usize {
         self.num_objects
     }

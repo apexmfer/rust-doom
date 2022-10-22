@@ -31,6 +31,24 @@ pub struct Level {
 }
 
 impl Level {
+
+    pub fn new_empty() -> Self {
+
+        let mut this = Self {
+            things: Vec::new(),
+            linedefs: Vec::new(),
+            sidedefs: Vec::new(),
+            vertices: Vec::new(),
+            segs:Vec::new(),
+            subsectors:Vec::new(),
+            nodes: Vec::new(),
+            sectors: Vec::new(),
+       };
+       this
+
+    } 
+
+
     pub fn from_archive(wad: &Archive, index: usize) -> Result<Level> {
         let lump = wad.level_lump(index)?;
         info!("Reading level data for '{}'...", lump.name());

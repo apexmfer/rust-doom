@@ -234,7 +234,7 @@ impl<'context> Dependencies<'context> {
                 )?,
             )
             .id();
-/* 
+ 
         let sky_uniforms = self.load_sky_uniforms(parent)?;
         let sky_material = self
             .materials
@@ -246,30 +246,31 @@ impl<'context> Dependencies<'context> {
             .add_uniform("u_tiled_band_size", sky_uniforms.tiled_band_size)
             .id();
 
-        let decor_atlas = self.load_decor_atlas(parent)?;
-        let decor_material = self
-            .materials
-            .add(
-                self.entities,
-                parent,
-                globals.sprite_shader,
-                "decor_material",
-            )?
-            .add_uniform("u_modelview", modelview)
-            .add_uniform("u_projection", projection)
-            .add_uniform("u_time", globals.time)
-            .add_uniform("u_lights", globals.lights_buffer_texture)
-            .add_uniform("u_palette", globals.palette)
-            .add_uniform("u_atlas", decor_atlas.texture)
-            .add_uniform(
-                "u_atlas_size",
-                self.uniforms.add_texture2d_size(
+            let decor_atlas = self.load_decor_atlas(parent)?;
+            let decor_material = self
+                .materials
+                .add(
                     self.entities,
-                    "decor_atlas_size_uniform",
-                    decor_atlas.texture,
-                )?,
-            )
-            .id(); */
+                    parent,
+                    globals.sprite_shader,
+                    "decor_material",
+                )?
+                .add_uniform("u_modelview", modelview)
+                .add_uniform("u_projection", projection)
+                .add_uniform("u_time", globals.time)
+                .add_uniform("u_lights", globals.lights_buffer_texture)
+                .add_uniform("u_palette", globals.palette)
+                .add_uniform("u_atlas", decor_atlas.texture)
+                .add_uniform(
+                    "u_atlas_size",
+                    self.uniforms.add_texture2d_size(
+                        self.entities,
+                        "decor_atlas_size_uniform",
+                        decor_atlas.texture,
+                    )?,
+                )
+                .id();
+    
 
         Ok(LevelMaterials {
             flats: AtlasMaterial {
@@ -280,11 +281,10 @@ impl<'context> Dependencies<'context> {
                 material: walls_material,
                 bounds: walls_atlas.bounds,
             },
-
-            //hack for now 
+ 
             decor: AtlasMaterial {
-                material: flats_material,
-                bounds: flats_atlas.bounds,
+                material: decor_material,
+                bounds: decor_atlas.bounds,
             },
             sky: flats_material,
         })
@@ -339,6 +339,67 @@ impl<'context> Dependencies<'context> {
 
     
  
+    fn load_decor_atlas(&mut self, parent: EntityId) -> Result<Atlas> {
+        info!("Building sprite decorations atlas...");
+        let (image, bounds) = {
+          //  let wad = &self.scene_layout;
+          let sceneLayout = &self.scene_layout;
+          let metadata = &sceneLayout.metadata();
+
+            let names = sceneLayout
+                .level
+                .things
+                .iter()
+                .filter_map(|thing| metadata
+                .find_thing(thing.thing_type))
+                .flat_map(|decor| {
+                    let mut sprite0 = decor.sprite;
+                    let _ = sprite0.push(decor.sequence.as_bytes()[0]);
+                    let mut sprite1 = sprite0;
+                    let sprite0 = sprite0.push(b'0').ok().map(|_| sprite0);
+                    let sprite1 = sprite1.push(b'1').ok().map(|_| sprite1);
+                    sprite0.into_iter().chain(sprite1)
+                });
+                self.scene_layout.textures.build_texture_atlas(names)
+        };
+        let texture = self.load_wad_texture(
+            parent,
+            "decor_atlas_texture",
+            TextureSpec::TransparentAtlas(&image),
+        )?;
+        Ok(Atlas { texture, bounds })
+    }
+
+    fn load_sky_uniforms(&mut self, parent: EntityId) -> Result<SkyUniforms> {
+        let (texture_name, tiled_band_size) = self
+            .scene_layout
+            .metadata()
+            .sky_for(self.scene_layout.level_name())
+            .map_or_else(
+                || {
+                    error!("No sky texture for level, will not render skies.");
+                    (
+                        WadName::from_bytes(b"-").expect("cannot convert dummy name"),
+                        0.0,
+                    )
+                },
+                |meta| (meta.texture_name, meta.tiled_band_size),
+            );
+        Ok(SkyUniforms {
+            texture: self.load_wad_texture(
+                parent,
+                "sky_texture",
+                TextureSpec::TextureName(texture_name),
+            )?,
+            tiled_band_size: self.uniforms.add_float(
+                self.entities,
+                parent,
+                "sky_tiled_band_size_uniform",
+                tiled_band_size,
+            )?,
+        })
+    }
+
 
     fn load_wad_texture(
         &mut self,

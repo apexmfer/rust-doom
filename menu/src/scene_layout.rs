@@ -20,6 +20,8 @@ use wad::{
 };
 
 use wad::types::{WadCoord, WadLinedef, WadSector, WadSidedef, WadSubsector, WadThing, WadVertex};
+use std::str::{self, FromStr};
+use indexmap::IndexMap;
 
 #[derive(Debug)]
 pub struct Config {
@@ -67,7 +69,7 @@ impl SceneLayout {
             &self.level,
             &self.analysis,
             &self.textures,
-            self.metadata(),
+            &self.metadata(),
             visitor,
         )
         .walk();
@@ -76,8 +78,8 @@ impl SceneLayout {
 
 
     //stub in for now ! 
-    pub fn metadata(&self) -> &WadMetadata {
-        return   &WadMetadata::from_text(
+    pub fn metadata(&self) -> WadMetadata {
+       let metadata = WadMetadata::from_text(
             r#"
             [[sky]]
                 level_pattern = "MAP(0[1-9]|10|11)"
@@ -166,6 +168,10 @@ impl SceneLayout {
                     hanging = false
         "#,
         ).expect("Could not parse WadMetadata text");
+
+
+        return metadata 
+
     } 
     
 }
@@ -199,7 +205,7 @@ impl<'context> System<'context> for SceneLayout {
         .chain_err(|| ErrorKind(format!("WAD setup failed with: {:#?}", deps.config)))?;*/
 
         let level_index = 0;
-        let level_name = "Menu Scene";
+        let level_name = WadName::from_str("mscene").expect("Could not build wad name");
 
        /* if level_index >= archive.num_levels() {
             bail!(
@@ -221,15 +227,24 @@ impl<'context> System<'context> for SceneLayout {
             ))
         })?;*/
 
+        let level = WadLevel::new_empty();
 
         //need to load fake data here ! 
 
         info!("Analysing level...");
-        let analysis = LevelAnalysis::new(&level, archive.metadata());
+        let analysis = LevelAnalysis::new_empty();
+        
+         
+        
+        
+        //LevelAnalysis::new(&level, archive.metadata());
 
         //empty 
         let sidedefs = Vec::new();
         let sectors = Vec::new();
+
+         //empty 
+        let textures = TextureDirectory::new_empty() ; 
 
 
         Ok(SceneLayout {

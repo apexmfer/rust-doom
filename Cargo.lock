@@ -764,6 +764,7 @@ dependencies = [
  "failure",
  "glium",
  "idcontain",
+ "indexmap",
  "log",
  "math",
  "vec_map",

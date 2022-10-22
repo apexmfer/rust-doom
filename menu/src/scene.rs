@@ -171,7 +171,7 @@ impl<'context> System<'context> for Scene {
         "scene"
     }
 
-    fn create(deps: Dependencies) -> Result<Self> {
+    fn create(mut deps: Dependencies) -> Result<Self> {
 
 
 

@@ -50,6 +50,21 @@ pub struct OpaqueImage {
 }
 
 impl TextureDirectory {
+
+    
+    pub fn new_empty( ) -> Self {
+        let mut this = Self {
+            textures: IndexMap::new(),
+            patches:  Vec::new(),
+            palettes:  Vec::new(),
+            colormaps:  Vec::new(),
+            flats:  IndexMap::new(),
+            animated_walls:  Vec::new(),
+            animated_flats:  Vec::new() 
+        };
+        this
+    }
+ 
     pub fn from_archive(wad: &Archive) -> Result<TextureDirectory> {
         info!("Reading texture directory...");
 
