@@ -1,4 +1,7 @@
-use super::wad_system::WadSystem;
+
+
+
+
 use engine::{
     BufferTextureId, BufferTextureType, ClientFormat, DependenciesFrom, Entities, EntityId, Error,
     FloatUniformId, MagnifySamplerFilter, MaterialId, Materials, MinifySamplerFilter,
@@ -11,6 +14,11 @@ use wad::tex::BoundsLookup;
 use wad::types::{COLORMAP_SIZE, PALETTE_SIZE};
 use wad::util::{is_sky_flat, is_untextured};
 use wad::{OpaqueImage as WadOpaqueImage, TransparentImage as WadTransparentImage, WadName};
+
+
+
+use super::scene_layout::{SceneLayout };
+ 
 
 pub struct AtlasMaterial {
     pub material: MaterialId,
@@ -48,7 +56,8 @@ pub struct Dependencies<'context> {
     render: &'context mut RenderPipeline,
     materials: &'context mut Materials,
 
-    wad: &'context mut WadSystem,
+    scene_layout: &'context mut SceneLayout,
+   // wad: &'context mut WadSystem,
 }
 
 impl<'context> System<'context> for GameShaders {
@@ -75,7 +84,7 @@ impl<'context> System<'context> for GameShaders {
     }
 
     fn update(&mut self, mut deps: Dependencies) -> Result<()> {
-        if deps.wad.level_changed() {
+        if deps.scene_layout.level_changed() {
             info!("Level changed, reloading level materials...");
             deps.entities.remove(self.level_id);
             self.level_id = deps.entities.add(self.globals_id, "level_materials")?;
@@ -121,7 +130,7 @@ struct Globals {
 
 impl<'context> Dependencies<'context> {
     fn load_palette(&mut self, parent: EntityId) -> Result<Texture2dId> {
-        let palette = self.wad.textures.build_palette_texture(0, 0, 32);
+        let palette = self.scene_layout.textures.build_palette_texture(0, 0, 32);
         self.uniforms.add_texture_2d(
             self.window,
             self.entities,
@@ -225,7 +234,7 @@ impl<'context> Dependencies<'context> {
                 )?,
             )
             .id();
-
+/* 
         let sky_uniforms = self.load_sky_uniforms(parent)?;
         let sky_material = self
             .materials
@@ -260,7 +269,7 @@ impl<'context> Dependencies<'context> {
                     decor_atlas.texture,
                 )?,
             )
-            .id();
+            .id(); */
 
         Ok(LevelMaterials {
             flats: AtlasMaterial {
@@ -271,11 +280,13 @@ impl<'context> Dependencies<'context> {
                 material: walls_material,
                 bounds: walls_atlas.bounds,
             },
+
+            //hack for now 
             decor: AtlasMaterial {
-                material: decor_material,
-                bounds: decor_atlas.bounds,
+                material: flats_material,
+                bounds: flats_atlas.bounds,
             },
-            sky: sky_material,
+            sky: flats_material,
         })
     }
 
@@ -283,8 +294,7 @@ impl<'context> Dependencies<'context> {
         info!("Building flats atlas...");
         let (image, bounds) = {
             let names = self
-                .wad
-                .level
+                .scene_layout 
                 .sectors
                 .iter()
                 .flat_map(|sector| {
@@ -293,7 +303,7 @@ impl<'context> Dependencies<'context> {
                         .chain(Some(sector.ceiling_texture))
                 })
                 .filter(|&name| !is_untextured(name) && !is_sky_flat(name));
-            self.wad.textures.build_flat_atlas(names)
+            self.scene_layout.textures.build_flat_atlas(names)
         };
         let texture = self.load_wad_texture(
             parent,
@@ -307,8 +317,7 @@ impl<'context> Dependencies<'context> {
         info!("Building walls atlas...");
         let (image, bounds) = {
             let names = self
-                .wad
-                .level
+                 .scene_layout
                 .sidedefs
                 .iter()
                 .flat_map(|sidedef| {
@@ -318,7 +327,7 @@ impl<'context> Dependencies<'context> {
                         .chain(Some(sidedef.middle_texture))
                 })
                 .filter(|&name| !is_untextured(name));
-            self.wad.textures.build_texture_atlas(names)
+            self.scene_layout.textures.build_texture_atlas(names)
         };
         let texture = self.load_wad_texture(
             parent,
@@ -328,63 +337,8 @@ impl<'context> Dependencies<'context> {
         Ok(Atlas { texture, bounds })
     }
 
-    fn load_decor_atlas(&mut self, parent: EntityId) -> Result<Atlas> {
-        info!("Building sprite decorations atlas...");
-        let (image, bounds) = {
-            let wad = &self.wad;
-            let names = wad
-                .level
-                .things
-                .iter()
-                .filter_map(|thing| wad.archive.metadata().find_thing(thing.thing_type))
-                .flat_map(|decor| {
-                    let mut sprite0 = decor.sprite;
-                    let _ = sprite0.push(decor.sequence.as_bytes()[0]);
-                    let mut sprite1 = sprite0;
-                    let sprite0 = sprite0.push(b'0').ok().map(|_| sprite0);
-                    let sprite1 = sprite1.push(b'1').ok().map(|_| sprite1);
-                    sprite0.into_iter().chain(sprite1)
-                });
-            wad.textures.build_texture_atlas(names)
-        };
-        let texture = self.load_wad_texture(
-            parent,
-            "decor_atlas_texture",
-            TextureSpec::TransparentAtlas(&image),
-        )?;
-        Ok(Atlas { texture, bounds })
-    }
-
-    fn load_sky_uniforms(&mut self, parent: EntityId) -> Result<SkyUniforms> {
-        let (texture_name, tiled_band_size) = self
-            .wad
-            .archive
-            .metadata()
-            .sky_for(self.wad.level_name())
-            .map_or_else(
-                || {
-                    error!("No sky texture for level, will not render skies.");
-                    (
-                        WadName::from_bytes(b"-").expect("cannot convert dummy name"),
-                        0.0,
-                    )
-                },
-                |meta| (meta.texture_name, meta.tiled_band_size),
-            );
-        Ok(SkyUniforms {
-            texture: self.load_wad_texture(
-                parent,
-                "sky_texture",
-                TextureSpec::TextureName(texture_name),
-            )?,
-            tiled_band_size: self.uniforms.add_float(
-                self.entities,
-                parent,
-                "sky_tiled_band_size_uniform",
-                tiled_band_size,
-            )?,
-        })
-    }
+    
+ 
 
     fn load_wad_texture(
         &mut self,
@@ -405,7 +359,7 @@ impl<'context> Dependencies<'context> {
         let dummy_texture;
         let image_ref = match texture_spec {
             TextureSpec::TextureName(texture_name) => {
-                if let Some(image) = self.wad.textures.texture(texture_name) {
+                if let Some(image) = self.scene_layout.textures.texture(texture_name) {
                     ImageRef::Transparent {
                         pixels: image.pixels(),
                         size: image.size(),

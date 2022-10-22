@@ -1,0 +1,1 @@
+1. enginer/renderer need to somehow get a flat texture into  pipe.models   and put it at the very  end(?) of sort order

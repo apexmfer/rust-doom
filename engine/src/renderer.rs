@@ -148,6 +148,8 @@ impl<'context> System<'context> for Renderer {
                     self.removed.push(index);
                     continue;
                 };
+ 
+
 
             frame
                 .draw(

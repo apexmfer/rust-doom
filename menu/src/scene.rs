@@ -15,7 +15,7 @@ use std::time::Instant;
 use super::game_shaders::{GameShaders, LevelMaterials};
 
 
-mod scene_layout;
+//mod scene_layout;
 
 pub struct Scene {
     root: EntityId,
@@ -263,7 +263,7 @@ struct Builder<'a> {
 }
 
 impl<'a> Builder<'a> {
-    fn build(deps: &mut Dependencies, scene_layout: SceneLayout) -> Result<Scene> {
+    fn build(deps: &mut Dependencies) -> Result<Scene> {
         info!("Building new scene...");
 
         let start_time = Instant::now();
@@ -275,7 +275,7 @@ impl<'a> Builder<'a> {
 
 
         
-        objects.extend((0..deps.scene_layout.num_objects()).map(|i_object| {
+      /*    objects.extend((0..deps.scene_layout.num_objects()).map(|i_object| {
             let entity = deps
                 .entities
                 .add(
@@ -286,10 +286,10 @@ impl<'a> Builder<'a> {
                         "dynamic_object"
                     },
                 )
-                .expect("add entity to world");
+                .expect("add entity to scene");
             deps.transforms.attach_identity(entity);
             entity
-        }));
+        }));*/
 
         let mut builder = Builder {
             materials: deps.game_shaders.level_materials(),
@@ -317,7 +317,7 @@ impl<'a> Builder<'a> {
           let volume = {
             let mut world_builder = WorldBuilder::new(&objects);
 
-            scene_layout.walk( &mut builder.chain(&mut world_builder)  );
+           // scene_layout.walk( &mut builder.chain(&mut world_builder)  );
            // deps.wad.walk(&mut builder.chain(&mut world_builder));
 
             //add stuff to the world here ?? 

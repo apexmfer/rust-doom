@@ -2,8 +2,9 @@ use super::errors::{ErrorKind, Result};
 
 use super::hud::{Bindings as HudBindings, Hud};
  
+use super::scene_layout::{SceneLayout};
 use super::scene::{Scene, Config as SceneConfig};
-
+use super::game_shaders::GameShaders;
 use super::SHADER_ROOT;
 use engine::type_list::Peek;
 use engine::{
@@ -61,10 +62,13 @@ pub fn create(config: &MenuConfig) -> Result<impl Menu> {
             .system(Meshes::bind())?
             .system(Materials::bind())?
             .system(RenderPipeline::bind())?
+            .system(GameShaders::bind())?
+            .system(SceneLayout::bind())?
             .system(Scene::bind())?
             .system(TextRenderer::bind())? 
             .system(Hud::bind())? 
             .system(Renderer::bind())?
+            
  
  
             .build()
