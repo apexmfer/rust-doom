@@ -62,8 +62,10 @@ pub fn create(config: &MenuConfig) -> Result<impl Menu> {
             .system(Meshes::bind())?
             .system(Materials::bind())?
             .system(RenderPipeline::bind())?
+            .system(SceneLayout::bind())?  
             .system(GameShaders::bind())?
-            .system(SceneLayout::bind())?
+
+       
             .system(Scene::bind())?
             .system(TextRenderer::bind())? 
             .system(Hud::bind())? 
