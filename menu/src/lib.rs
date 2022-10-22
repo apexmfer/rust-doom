@@ -7,7 +7,8 @@ mod vertex;
 mod scene;
 mod world; //need this ?
 mod lights;
-mod scene_shaders;
+mod game_shaders;
+mod scene_layout;
 
 pub use self::errors::{Error, Result};
 pub use self::menu::{create, Menu, MenuConfig};

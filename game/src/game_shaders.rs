@@ -73,7 +73,7 @@ impl<'context> System<'context> for GameShaders {
             level,
         })
     }
-
+ 
     fn update(&mut self, mut deps: Dependencies) -> Result<()> {
         if deps.wad.level_changed() {
             info!("Level changed, reloading level materials...");

@@ -1,8 +1,8 @@
 use super::lights::Lights;
 use engine::{
-    Analog2d, DependenciesFrom, Entities, EntityId, Gesture, InfallibleSystem, Input, MouseButton,
+    Analog2d, DependenciesFrom, Error, Entities, EntityId, Gesture, System, Input, MouseButton,
     Projection, Projections, RenderPipeline, Scancode, Tick, Transforms, Window,
-    Uniforms, Meshes 
+    Uniforms, Meshes, Result
 };
 use log::{debug, error, info, warn};
 use math::prelude::*;
@@ -12,8 +12,10 @@ use vec_map::VecMap;
 
 use super::world::{World, WorldBuilder};
 use std::time::Instant;
-use super::scene_shaders::{SceneShaders, SceneMaterials};
+use super::game_shaders::{GameShaders, LevelMaterials};
 
+
+mod scene_layout;
 
 pub struct Scene {
     root: EntityId,
@@ -52,7 +54,8 @@ pub struct Dependencies<'context> {
     meshes: &'context mut Meshes,
     render: &'context mut RenderPipeline,
  
-
+    
+    game_shaders: &'context GameShaders,
 
   //  level: &'context mut Level,
 }
@@ -160,14 +163,15 @@ impl Default for Config {
 
 
 
-impl<'context> InfallibleSystem<'context> for Scene {
+impl<'context> System<'context> for Scene {
     type Dependencies = Dependencies<'context>;
+    type Error = Error;
 
     fn debug_name() -> &'static str {
         "scene"
     }
 
-    fn create(deps: Dependencies) -> Scene {
+    fn create(deps: Dependencies) -> Result<Self> {
 
 
 
@@ -204,7 +208,7 @@ impl<'context> InfallibleSystem<'context> for Scene {
 
 
             
-             Builder::build(&mut deps);  //returns a scene 
+            return Builder::build(&mut deps);  //returns a Result<scene> 
 
            
 
@@ -212,15 +216,17 @@ impl<'context> InfallibleSystem<'context> for Scene {
             
     }
 
-    fn update(&mut self, deps: Dependencies) {
+    fn update(&mut self, deps: Dependencies)  -> Result<()> {
 
 
 
-
+        Ok(())
     }
 
-    fn teardown(&mut self, deps: Dependencies) {
+    fn teardown(&mut self, deps: Dependencies)  -> Result<()> {
       //  deps.entities.remove(self.id);
+
+       Ok(())
     }
 }
 
@@ -235,7 +241,7 @@ struct Indices {
 
 //consider moving builder to elsewhere 
 struct Builder<'a> {
-    materials: &'a SceneMaterials,
+    materials: &'a LevelMaterials,
 
     lights: Lights,
     start_pos: Pnt3f,
@@ -257,7 +263,7 @@ struct Builder<'a> {
 }
 
 impl<'a> Builder<'a> {
-    fn build(deps: &mut Dependencies) -> Result<Scene> {
+    fn build(deps: &mut Dependencies, scene_layout: SceneLayout) -> Result<Scene> {
         info!("Building new scene...");
 
         let start_time = Instant::now();
@@ -266,7 +272,10 @@ impl<'a> Builder<'a> {
         let mut objects = Vec::new();
         let world = deps.entities.add(root, "world")?;
         deps.transforms.attach_identity(world);
-        objects.extend((0..deps.wad.analysis.num_objects()).map(|i_object| {
+
+
+        
+        objects.extend((0..deps.scene_layout.num_objects()).map(|i_object| {
             let entity = deps
                 .entities
                 .add(
@@ -305,12 +314,17 @@ impl<'a> Builder<'a> {
         };
 
         info!("Walking level...");
-      /*   let volume = {
+          let volume = {
             let mut world_builder = WorldBuilder::new(&objects);
-            deps.wad.walk(&mut builder.chain(&mut world_builder));
+
+            scene_layout.walk( &mut builder.chain(&mut world_builder)  );
+           // deps.wad.walk(&mut builder.chain(&mut world_builder));
+
+            //add stuff to the world here ?? 
+
             world_builder.build()
         };
-*/
+ 
         //we need to add stuff to the scene LIKE worldbuilder+wad does but we need to do it manually 
 
 
@@ -466,3 +480,4 @@ impl<'a> Builder<'a> {
 
 
     }
+}

@@ -1,15 +1,4 @@
- 
-
-/*
-
-
-Instead of loading ANYTHING from wad, we load stuff manually -- maybe from a scene file 
-
- 
-
-*/
-
-
+use super::wad_system::WadSystem;
 use engine::{
     BufferTextureId, BufferTextureType, ClientFormat, DependenciesFrom, Entities, EntityId, Error,
     FloatUniformId, MagnifySamplerFilter, MaterialId, Materials, MinifySamplerFilter,
@@ -28,14 +17,14 @@ pub struct AtlasMaterial {
     pub bounds: BoundsLookup,
 }
 
-pub struct SceneMaterials {
+pub struct LevelMaterials {
     pub flats: AtlasMaterial,
     pub walls: AtlasMaterial,
     pub decor: AtlasMaterial,
     pub sky: MaterialId,
 }
 
-impl SceneShaders {
+impl GameShaders {
     pub fn time(&self) -> FloatUniformId {
         self.globals.time
     }
@@ -44,7 +33,7 @@ impl SceneShaders {
         self.globals.lights_buffer_texture
     }
 
-    pub fn level_materials(&self) -> &SceneMaterials {
+    pub fn level_materials(&self) -> &LevelMaterials {
         &self.level
     }
 }
@@ -59,25 +48,25 @@ pub struct Dependencies<'context> {
     render: &'context mut RenderPipeline,
     materials: &'context mut Materials,
 
-   // wad: &'context mut WadSystem,
+    wad: &'context mut WadSystem,
 }
 
-impl<'context> System<'context> for SceneShaders {
+impl<'context> System<'context> for GameShaders {
     type Dependencies = Dependencies<'context>;
     type Error = Error;
 
     fn debug_name() -> &'static str {
-        "scene_shaders"
+        "game_shaders"
     }
 
     fn create(mut deps: Dependencies) -> Result<Self> {
-        let globals_id = deps.entities.add_root("scene_shaders");
-        let level_id = deps.entities.add(globals_id, "scene_materials")?;
+        let globals_id = deps.entities.add_root("game_shaders");
+        let level_id = deps.entities.add(globals_id, "level_materials")?;
 
         let globals = deps.load_globals(globals_id)?;
         let level = deps.load_level(&globals, level_id)?;
 
-        Ok(SceneShaders {
+        Ok(GameShaders {
             globals_id,
             level_id,
             globals,
@@ -113,12 +102,12 @@ impl<'context> System<'context> for SceneShaders {
     }
 }
 
-pub struct SceneShaders {
+pub struct GameShaders {
     globals_id: EntityId,
     level_id: EntityId,
 
     globals: Globals,
-    level: SceneMaterials,
+    level: LevelMaterials,
 }
 
 struct Globals {
@@ -183,7 +172,7 @@ impl<'context> Dependencies<'context> {
         })
     }
 
-    fn load_level(&mut self, globals: &Globals, parent: EntityId) -> Result<SceneMaterials> {
+    fn load_level(&mut self, globals: &Globals, parent: EntityId) -> Result<LevelMaterials> {
         let modelview = self.render.modelview();
         let projection = self.render.projection();
 
@@ -273,7 +262,7 @@ impl<'context> Dependencies<'context> {
             )
             .id();
 
-        Ok(SceneMaterials {
+        Ok(LevelMaterials {
             flats: AtlasMaterial {
                 material: flats_material,
                 bounds: flats_atlas.bounds,
