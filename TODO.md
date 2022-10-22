@@ -6,6 +6,10 @@ First, try using  THE  WAD file to load the menu (make it easy)
 
 
 
+The menu textures are in the wad!!! SILLY !!
+Use the wad archive loader to access them 
+
+
 
 ## SOURCE REFERENCES 
 
